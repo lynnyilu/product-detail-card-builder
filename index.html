@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品介绍图制作工具</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --paper:#FFFFFF;
+    --canvas-bg:#F1EFE8;
+    --ink:#20241F;
+    --ink-soft:#4B5248;
+    --accent:#2F6844;
+    --accent-soft:#E9F0E6;
+    --rule:#DEDACD;
+    --danger:#B4432E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--canvas-bg);
+    font-family:"Noto Sans SC",sans-serif;
+    color:var(--ink);
+    padding:40px 20px 80px;
+  }
+  .toolbar{
+    max-width:760px;
+    margin:0 auto 16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .toolbar h1{
+    font-family:"Noto Serif SC",serif;
+    font-size:18px;
+    font-weight:700;
+    margin:0;
+    color:var(--ink);
+  }
+  .toolbar .hint{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    width:100%;
+    margin-top:-4px;
+  }
+  .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  button{
+    font-family:"Noto Sans SC",sans-serif;
+    font-size:13px;
+    border:1px solid var(--rule);
+    background:var(--paper);
+    color:var(--ink);
+    padding:8px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  button:hover{border-color:var(--accent);color:var(--accent);}
+  button.primary{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  button.primary:hover{background:#254F35;color:#fff;}
+  button.ghost{
+    color:var(--ink-soft);
+  }
+
+  .file-status{
+    max-width:760px;
+    margin:0 auto 10px;
+    font-size:12px;
+    color:var(--ink-soft);
+    min-height:16px;
+  }
+  .file-status.ok{color:var(--accent);}
+  .file-status.err{color:var(--danger);}
+
+  .wm-bar{
+    max-width:760px;
+    margin:0 auto 24px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:10px 14px;
+  }
+  .wm-bar label{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .wm-bar input[type="text"]{
+    font-family:"Noto Sans SC",sans-serif;
+    font-size:13px;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:6px 8px;
+    flex:1;
+    min-width:160px;
+  }
+  .wm-bar input[type="range"]{width:100px;}
+
+  #stage-wrap{
+    max-width:760px;
+    margin:0 auto;
+  }
+  #card{
+    background:var(--paper);
+    padding:64px 48px 52px;
+    position:relative;
+    overflow:hidden;
+  }
+  [contenteditable="true"]{
+    outline:none;
+    border-radius:2px;
+  }
+  [contenteditable="true"]:hover{
+    background:rgba(47,104,68,0.05);
+  }
+  [contenteditable="true"]:focus{
+    background:rgba(47,104,68,0.07);
+    box-shadow:0 0 0 1px var(--accent);
+  }
+
+  .content-layer{position:relative;z-index:1;}
+
+  .eyebrow{
+    font-size:24px;
+    letter-spacing:0.02em;
+    color:var(--accent);
+    font-weight:500;
+    margin-bottom:16px;
+  }
+  .title{
+    font-family:"Noto Serif SC",serif;
+    font-size:42px;
+    font-weight:700;
+    line-height:1.4;
+    margin-bottom:12px;
+  }
+  .subtitle{
+    font-size:28px;
+    color:var(--ink-soft);
+    line-height:1.7;
+    margin-bottom:40px;
+  }
+  .rule{
+    height:2px;
+    background:var(--rule);
+    margin:40px 0;
+  }
+
+  ul.bullets{
+    list-style:none;
+    padding:0;
+    margin:0 0 12px;
+  }
+  ul.bullets li{
+    position:relative;
+    padding-left:36px;
+    font-size:29px;
+    line-height:1.85;
+    margin-bottom:20px;
+    color:var(--ink);
+  }
+  ul.bullets li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:20px;
+    width:12px;
+    height:12px;
+    background:var(--accent);
+    border-radius:50%;
+  }
+
+  .section{margin-bottom:36px;position:relative;}
+  .section-title{
+    font-family:"Noto Serif SC",serif;
+    font-size:31px;
+    font-weight:700;
+    color:var(--accent);
+    margin-bottom:16px;
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .section-title .tag{
+    display:inline-block;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-family:"Noto Sans SC",sans-serif;
+    font-size:21px;
+    font-weight:500;
+    padding:4px 14px;
+    border-radius:4px;
+  }
+  .section-body{
+    font-size:27px;
+    line-height:1.85;
+    color:var(--ink);
+  }
+
+  .footer-note{
+    margin-top:44px;
+    padding-top:28px;
+    border-top:1px solid var(--rule);
+    font-size:22px;
+    color:#8A8F84;
+    line-height:1.7;
+  }
+
+  .del-btn{
+    position:absolute;
+    right:-40px;
+    top:4px;
+    width:34px;
+    height:34px;
+    line-height:32px;
+    text-align:center;
+    font-size:22px;
+    padding:0;
+    border-radius:50%;
+    color:#B4432E;
+    border-color:#E7C9C2;
+    opacity:0;
+    transition:opacity .15s;
+  }
+  ul.bullets li:hover .del-btn,
+  .section:hover > .section-title .del-btn{opacity:1;}
+  .section > .del-btn{right:-8px;top:-8px;}
+
+  /* watermark */
+  #watermarkLayer{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:5;
+  }
+  .wm-item{
+    position:absolute;
+    white-space:nowrap;
+    font-family:"Noto Sans SC",sans-serif;
+    font-weight:500;
+    letter-spacing:0.03em;
+    user-select:none;
+  }
+
+  @media (max-width:820px){
+    .del-btn{opacity:1;}
+    #card{padding:36px 22px 30px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1>产品介绍图制作工具</h1>
+  <div class="btns">
+    <button id="addBullet">+ 要点</button>
+    <button id="addSection">+ 板块</button>
+    <button id="saveBtn" class="ghost">保存文件</button>
+    <button id="loadBtn" class="ghost">打开文件</button>
+    <input type="file" id="loadInput" accept="application/json" style="display:none">
+    <button id="exportBtn" class="primary">导出为图片</button>
+  </div>
+  <div class="hint">点击文字即可直接编辑；「保存文件」会把当前内容存成一个 .json 文件，下次点「打开文件」选它就能继续编辑；「导出为图片」是最终成品图。</div>
+</div>
+<div class="file-status" id="fileStatus"></div>
+
+<div class="wm-bar">
+  <label>水印开关 <input type="checkbox" id="wmToggle" checked></label>
+  <input type="text" id="wmText" value="JJ 澳洲直邮代购">
+  <label>透明度 <input type="range" id="wmOpacity" min="4" max="30" value="12"></label>
+  <label>大小 <input type="range" id="wmSize" min="22" max="48" value="28"></label>
+</div>
+
+<div id="stage-wrap">
+  <div id="card">
+    <div id="watermarkLayer"></div>
+    <div class="content-layer">
+      <div class="eyebrow" contenteditable="true">产品介绍</div>
+      <div class="title" contenteditable="true">产品名称，写在这里</div>
+      <div class="subtitle" contenteditable="true">一句话说明这款产品是什么、解决什么问题。</div>
+
+      <ul class="bullets" id="bulletList">
+        <li contenteditable="true">第一个卖点，说明具体作用或成分优势。<button class="del-btn" data-del="li">×</button></li>
+        <li contenteditable="true">第二个卖点，可以对比同类产品的差异化之处。<button class="del-btn" data-del="li">×</button></li>
+        <li contenteditable="true">第三个卖点，例如适用人群或使用场景。<button class="del-btn" data-del="li">×</button></li>
+      </ul>
+
+      <div class="rule"></div>
+
+      <div class="section" id="sectionsAnchor">
+        <div class="section-title">
+          <span class="tag" contenteditable="true">用法</span>
+          <span contenteditable="true">使用方法</span>
+          <button class="del-btn" data-del="section">×</button>
+        </div>
+        <div class="section-body" contenteditable="true">在这里写清楚每日用量、用法用量或注意的时间点。</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          <span class="tag" contenteditable="true">提示</span>
+          <span contenteditable="true">注意事项</span>
+          <button class="del-btn" data-del="section">×</button>
+        </div>
+        <div class="section-body" contenteditable="true">补充说明储存条件、过敏原、禁忌人群等信息。</div>
+      </div>
+
+      <div class="footer-note" contenteditable="true">本内容仅供参考，不能替代专业医疗建议；如有不适请咨询医生或药师。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const bulletList = document.getElementById('bulletList');
+const cardEl = document.getElementById('card');
+const wmLayer = document.getElementById('watermarkLayer');
+const wmToggle = document.getElementById('wmToggle');
+const wmTextInput = document.getElementById('wmText');
+const wmOpacityInput = document.getElementById('wmOpacity');
+const wmSizeInput = document.getElementById('wmSize');
+const fileStatus = document.getElementById('fileStatus');
+
+function showStatus(msg, type){
+  fileStatus.textContent = msg;
+  fileStatus.className = 'file-status' + (type ? ' ' + type : '');
+  if(msg){
+    setTimeout(() => { if(fileStatus.textContent === msg) fileStatus.textContent = ''; }, 4000);
+  }
+}
+
+function buildWatermark(){
+  wmLayer.innerHTML = '';
+  if(!wmToggle.checked) return;
+  const text = wmTextInput.value.trim() || 'JJ 澳洲直邮代购';
+  const opacity = wmOpacityInput.value / 100;
+  const fontSize = parseInt(wmSizeInput.value, 10);
+  const rect = cardEl.getBoundingClientRect();
+  const stepX = fontSize * 13;
+  const stepY = fontSize * 6.5;
+  const cols = Math.ceil(rect.width / stepX) + 3;
+  const rows = Math.ceil(rect.height / stepY) + 3;
+  for(let r = 0; r < rows; r++){
+    for(let c = 0; c < cols; c++){
+      const span = document.createElement('span');
+      span.className = 'wm-item';
+      span.textContent = text;
+      const offsetX = (r % 2 === 0) ? 0 : stepX / 2;
+      const x = c * stepX - stepX + offsetX;
+      const y = r * stepY - stepY;
+      span.style.left = x + 'px';
+      span.style.top = y + 'px';
+      span.style.fontSize = fontSize + 'px';
+      span.style.color = 'rgba(32,36,31,' + opacity + ')';
+      span.style.transform = 'rotate(-24deg)';
+      wmLayer.appendChild(span);
+    }
+  }
+}
+
+[wmToggle, wmTextInput, wmOpacityInput, wmSizeInput].forEach(el => {
+  el.addEventListener('input', buildWatermark);
+});
+window.addEventListener('resize', buildWatermark);
+window.addEventListener('load', buildWatermark);
+buildWatermark();
+
+document.getElementById('addBullet').onclick = () => {
+  const li = document.createElement('li');
+  li.contentEditable = true;
+  li.textContent = '新的要点，点击此处编辑内容。';
+  const del = document.createElement('button');
+  del.className = 'del-btn';
+  del.dataset.del = 'li';
+  del.textContent = '×';
+  li.appendChild(del);
+  bulletList.appendChild(li);
+  li.focus();
+};
+
+function createSectionEl(tag, heading, body){
+  const wrap = document.createElement('div');
+  wrap.className = 'section';
+  wrap.innerHTML = `
+    <div class="section-title">
+      <span class="tag" contenteditable="true">${tag}</span>
+      <span contenteditable="true">${heading}</span>
+      <button class="del-btn" data-del="section">×</button>
+    </div>
+    <div class="section-body" contenteditable="true">${body}</div>
+  `;
+  return wrap;
+}
+
+document.getElementById('addSection').onclick = () => {
+  const wrap = createSectionEl('标签', '新板块标题', '在这里填写这个板块的详细内容。');
+  const footer = document.querySelector('.footer-note');
+  footer.parentNode.insertBefore(wrap, footer);
+};
+
+cardEl.addEventListener('click', (e) => {
+  if (e.target.dataset.del === 'li') {
+    e.target.closest('li').remove();
+  } else if (e.target.dataset.del === 'section') {
+    e.target.closest('.section').remove();
+  }
+});
+
+function sanitizeFilename(name){
+  const cleaned = (name || '').replace(/[\\/:*?"<>|]/g, '').trim();
+  return cleaned || '产品介绍图';
+}
+
+document.getElementById('exportBtn').onclick = async () => {
+  document.querySelectorAll('.del-btn').forEach(b => b.style.visibility = 'hidden');
+  const canvas = await html2canvas(cardEl, {backgroundColor: '#ffffff', scale: 2});
+  document.querySelectorAll('.del-btn').forEach(b => b.style.visibility = '');
+  const name = sanitizeFilename(document.querySelector('.title').textContent);
+  const link = document.createElement('a');
+  link.download = name + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+};
+
+/* ---------- 保存 / 打开 为可编辑的数据文件 (JSON) ---------- */
+
+function serializeCard(){
+  const bullets = Array.from(bulletList.querySelectorAll('li')).map(li => {
+    const clone = li.cloneNode(true);
+    const del = clone.querySelector('.del-btn');
+    if(del) del.remove();
+    return clone.textContent.trim();
+  });
+
+  const sections = Array.from(document.querySelectorAll('.content-layer > .section')).map(sec => {
+    const tag = sec.querySelector('.section-title .tag').textContent.trim();
+    const heading = sec.querySelector('.section-title span:not(.tag)').textContent.trim();
+    const body = sec.querySelector('.section-body').innerHTML;
+    return { tag, heading, body };
+  });
+
+  return {
+    _type: 'product-intro-card',
+    _version: 1,
+    eyebrow: document.querySelector('.eyebrow').textContent.trim(),
+    title: document.querySelector('.title').textContent.trim(),
+    subtitle: document.querySelector('.subtitle').textContent.trim(),
+    bullets: bullets,
+    sections: sections,
+    footer: document.querySelector('.footer-note').innerHTML,
+    watermark: {
+      enabled: wmToggle.checked,
+      text: wmTextInput.value,
+      opacity: wmOpacityInput.value,
+      size: wmSizeInput.value
+    }
+  };
+}
+
+function loadCard(data){
+  document.querySelector('.eyebrow').textContent = data.eyebrow || '';
+  document.querySelector('.title').textContent = data.title || '';
+  document.querySelector('.subtitle').textContent = data.subtitle || '';
+
+  bulletList.innerHTML = '';
+  (data.bullets || []).forEach(text => {
+    const li = document.createElement('li');
+    li.contentEditable = true;
+    li.textContent = text;
+    const del = document.createElement('button');
+    del.className = 'del-btn';
+    del.dataset.del = 'li';
+    del.textContent = '×';
+    li.appendChild(del);
+    bulletList.appendChild(li);
+  });
+
+  document.querySelectorAll('.content-layer > .section').forEach(s => s.remove());
+  const footer = document.querySelector('.footer-note');
+  (data.sections || []).forEach(sec => {
+    const el = createSectionEl(sec.tag || '', sec.heading || '', sec.body || '');
+    footer.parentNode.insertBefore(el, footer);
+  });
+
+  footer.innerHTML = data.footer || '';
+
+  if(data.watermark){
+    wmToggle.checked = !!data.watermark.enabled;
+    wmTextInput.value = data.watermark.text || 'JJ 澳洲直邮代购';
+    wmOpacityInput.value = data.watermark.opacity || 12;
+    wmSizeInput.value = data.watermark.size || 28;
+  }
+  buildWatermark();
+}
+
+document.getElementById('saveBtn').onclick = () => {
+  const data = serializeCard();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const name = sanitizeFilename(document.querySelector('.title').textContent);
+  link.download = name + '.json';
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+  showStatus('已保存为「' + name + '.json」，下次点「打开文件」即可继续编辑。', 'ok');
+};
+
+document.getElementById('loadBtn').onclick = () => {
+  document.getElementById('loadInput').click();
+};
+
+document.getElementById('loadInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      loadCard(data);
+      showStatus('已加载「' + file.name + '」，可以继续编辑。', 'ok');
+    }catch(err){
+      showStatus('打开失败：这不是一个有效的草稿文件。', 'err');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+</script>
+
+</body>
+</html>

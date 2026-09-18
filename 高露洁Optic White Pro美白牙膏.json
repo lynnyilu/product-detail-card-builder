@@ -1,0 +1,30 @@
+{
+  "_type": "product-intro-card",
+  "_version": 1,
+  "eyebrow": "产品介绍",
+  "title": "高露洁Optic White Pro美白牙膏",
+  "subtitle": "5%过氧化氢+ActivShine抛光科技，深层美白同时兼顾牙釉质安全，两款清凉薄荷口味可选",
+  "bullets": [
+    "💙蓝色防渍款：核心成分5%过氧化氢，日常刷牙有助淡化咖啡、茶渍、红酒渍，持续使用减少新渍形成，牙釉质安全可长期用",
+    "💚绿色鲜活清新款：同样含5%过氧化氢+ActivShine抛光科技，薄荷清凉感更突出，深层美白同时带来长效清新口气"
+  ],
+  "sections": [
+    {
+      "tag": "用法",
+      "heading": "使用方法",
+      "body": "早晚各刷牙一次，每次至少2分钟，刷后吐出并用少量清水漱口，请勿吞咽"
+    },
+    {
+      "tag": "提示",
+      "heading": "注意事项",
+      "body": "6岁以下儿童不建议使用"
+    }
+  ],
+  "footer": "<br>",
+  "watermark": {
+    "enabled": true,
+    "text": "JJ 澳洲直邮代购",
+    "opacity": "12",
+    "size": "28"
+  }
+}
